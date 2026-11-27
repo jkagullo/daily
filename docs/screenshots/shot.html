@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Daily screenshot harness</title>
+    <style>html,body{margin:0}</style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import { mockIPC, mockWindows } from "@tauri-apps/api/mocks";
+      import { addDays, toDateKey } from "/src/lib/date.ts";
+
+      const params = new URLSearchParams(location.search);
+      const theme = params.get("theme") ?? "light";
+      const accent = params.get("accent") ?? "green";
+      const mode = params.get("mode") ?? "app";
+
+      const today = new Date();
+      const key = toDateKey(today);
+      const at = (h, m) => `${key} ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00`;
+      const tasks = [
+        { instance_id: 1, task_id: 1, title: "Morning workout", recurrence: "daily", completed_at: at(7, 12) },
+        { instance_id: 2, task_id: 2, title: "Review pull requests", recurrence: "weekdays", completed_at: at(10, 41) },
+        { instance_id: 3, task_id: 3, title: "Read 20 pages", recurrence: "daily", completed_at: at(13, 5) },
+        { instance_id: 4, task_id: 4, title: "Ship the settings screen", recurrence: null, completed_at: null },
+        { instance_id: 5, task_id: 5, title: "Terraform lab", recurrence: "days:1,3,5", completed_at: null },
+        { instance_id: 6, task_id: 6, title: "Call mom", recurrence: null, completed_at: at(18, 30) },
+      ];
+      // Deterministic, believable history: busier lately, a 16-day streak, a few gaps.
+      let seed = 7;
+      const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+      const summaries = [];
+      for (let i = 1; i < 140; i++) {
+        const r = rand();
+        if (i > 16 && r < (i > 90 ? 0.45 : 0.18)) continue;
+        const total = 4 + Math.floor(rand() * 3);
+        const done = i <= 16 ? Math.max(1, Math.round(total * (0.5 + rand() * 0.5))) : Math.round(total * rand());
+        summaries.push({ date: toDateKey(addDays(today, -i)), total, done });
+      }
+      summaries.push({ date: key, total: 6, done: 4 });
+      const log = tasks
+        .filter((t) => t.completed_at)
+        .sort((a, b) => b.completed_at.localeCompare(a.completed_at))
+        .map((t) => ({ title: t.title, completed_at: t.completed_at }));
+
+      mockWindows("main");
+      mockIPC((cmd, args) => {
+        if (cmd === "plugin:sql|load") return "sqlite:daily.db";
+        if (cmd === "plugin:sql|execute") return [0, 1];
+        if (cmd === "plugin:sql|select") {
+          const q = args.query;
+          if (q.includes("FROM settings")) return [
+            { key: "theme", value: JSON.stringify(theme) },
+            { key: "accent", value: JSON.stringify(accent) },
+            { key: "exportName", value: JSON.stringify("jkdev") },
+          ];
+          if (q.includes("GROUP BY date")) return summaries;
+          if (q.includes("completed_at DESC")) return log.slice(0, 5);
+          if (q.includes("i.date = $1")) return tasks;
+          return [];
+        }
+        if (cmd === "get_autostart") return true;
+        if (cmd === "plugin:app|version") return "0.1.0";
+        if (cmd.startsWith("plugin:notification")) return false;
+        return null;
+      }, { shouldMockEvents: true });
+
+      if (mode === "export") {
+        const { renderHeatmapPng } = await import("/src/lib/exportImage.ts");
+        const { ACCENTS } = await import("/src/lib/settings.ts");
+        const blob = await renderHeatmapPng({ today, summaries, streak: 16, accent: ACCENTS[accent], title: "My tasks", name: "jkdev" });
+        const img = new Image();
+        img.src = URL.createObjectURL(blob);
+        img.style.cssText = "display:block;width:" + 552 + "px";
+        document.body.appendChild(img);
+      } else {
+        await import("/src/main.tsx");
+        if (mode === "settings") {
+          setTimeout(() => document.querySelector('[aria-label="Settings"]')?.click(), 400);
+        }
+      }
+    </script>
+  </body>
+</html>

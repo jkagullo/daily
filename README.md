@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="src-tauri/icons/128x128.png" width="96" alt="Daily icon: a little pixel bot with a daisy antenna" />
+<img src="docs/screenshots/banner.png" alt="Daily: a small task panel that opens from the Windows tray, shown in light and dark themes" />
 
 # Daily
 
@@ -8,11 +8,27 @@
 
 Plan today, check things off, and watch your streak grow. No account, no cloud. Your data stays on your PC.
 
-[**Download for Windows**](https://github.com/jkagullo/daily/releases/latest)
+[**⬇ Download for Windows**](https://github.com/jkagullo/daily/releases/latest)
 
 </div>
 
 ---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/screenshots/panel-light.png" width="260" alt="Today's tasks in the light theme" /><br /><sub>Today, light</sub></td>
+    <td align="center"><img src="docs/screenshots/panel-dark.png" width="260" alt="Today's tasks in the dark theme" /><br /><sub>Today, dark</sub></td>
+    <td align="center"><img src="docs/screenshots/settings.png" width="260" alt="Settings: reminder, start with Windows, theme, accent, export" /><br /><sub>Settings</sub></td>
+  </tr>
+</table>
+
+**Export your heatmap** and share how your month went:
+
+<img src="docs/screenshots/export-example.png" width="552" alt="Exported heatmap image titled My tasks, with a 16 day streak" />
+
+<sub>Screenshots use demo data. See <a href="docs/screenshots/README.md">docs/screenshots</a> to regenerate them.</sub>
 
 ## Features
 
