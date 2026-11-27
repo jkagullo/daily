@@ -191,14 +191,6 @@ export function SettingsView({ settings, onChange, onBackup, onRestore }: Props)
           onSave={(v) => onChange("exportTitle", v || "My tasks")}
         />
       </Row>
-      <Row label="Your name" hint="“Made with love by …”">
-        <TextSetting
-          value={settings.exportName}
-          placeholder="Optional"
-          label="Your name"
-          onSave={(v) => onChange("exportName", v)}
-        />
-      </Row>
 
       <h2>Data</h2>
       <div className="set-buttons">

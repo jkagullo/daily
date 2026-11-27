@@ -12,7 +12,9 @@ const COLORS = {
   faint: "#9c9a93",
   empty: "#ebeae5",
 };
-const APP_CREDIT = "Daily by jkdev · github.com/jkagullo/daily";
+// The signature is the app's, not the user's: Daily is made by jkdev.
+const SIGNATURE = "Made with love by jkdev ";
+const APP_CREDIT = "Daily · github.com/jkagullo/daily";
 
 /** Same ramp as the panel's CSS (--l0…--l4), computed for the export. */
 function levelColors(accent: string): string[] {
@@ -40,8 +42,6 @@ interface ExportInput {
   /** Hex accent from settings */
   accent: string;
   title: string;
-  /** "made with love by {name}"; omitted when empty */
-  name: string;
 }
 
 function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
@@ -50,7 +50,7 @@ function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: numbe
   ctx.fill();
 }
 
-export function renderHeatmapPng({ today, summaries, streak, accent, title, name }: ExportInput): Promise<Blob> {
+export function renderHeatmapPng({ today, summaries, streak, accent, title }: ExportInput): Promise<Blob> {
   const levels = levelColors(accent);
   const weeks = HEATMAP_WEEKS;
   const cells = buildCells(today, summaries, weeks);
@@ -119,11 +119,9 @@ export function renderHeatmapPng({ today, summaries, streak, accent, title, name
   const footY = gridY + gridH + 46;
   ctx.fillStyle = COLORS.sub;
   ctx.font = `400 13px ${FONT}`;
-  const who = name.trim();
-  const sig = who ? `Made with love by ${who} ` : "Made with love ";
-  ctx.fillText(sig, PAD, footY);
+  ctx.fillText(SIGNATURE, PAD, footY);
   ctx.font = `400 13px ${EMOJI_FONT}`;
-  ctx.fillText("🌼", PAD + ctx.measureText(sig).width + 2, footY);
+  ctx.fillText("🌼", PAD + ctx.measureText(SIGNATURE).width + 2, footY);
 
   ctx.font = `400 11px ${FONT}`;
   ctx.fillStyle = COLORS.faint;

@@ -36,7 +36,7 @@ Plan today, check things off, and watch your streak grow. No account, no cloud. 
 - **Recurring tasks.** Once, daily, weekdays, or any days you pick (e.g. Mon/Wed/Fri). Each day gets a fresh copy. Skipped days don't pile up.
 - **Progress at a glance.** A progress bar in the panel *and* a tiny one under the tray icon.
 - **Heatmap.** A contribution-style grid of the last 20 weeks. Click any square to see what you finished that day.
-- **Export your heatmap** as a shareable PNG with your own title and name.
+- **Export your heatmap** as a shareable PNG with your own title.
 - **Evening reminder.** A gentle Windows notification if you're behind (default: 9 PM, under 50%).
 - **Drag to reorder**, **double-click to edit**, **light/dark theme**, **accent colors**, **backup & restore**.
 - **Light.** Built with [Tauri](https://tauri.app), so it uses the WebView2 that's already part of Windows instead of shipping a whole browser.

@@ -165,7 +165,6 @@ export default function App() {
         streak: streak(summaries, today),
         accent: ACCENTS[settings.accent],
         title: settings.exportTitle,
-        name: settings.exportName,
       });
       setExportMsg(saved ? "Saved" : null);
       if (saved) setTimeout(() => setExportMsg(null), 2000);

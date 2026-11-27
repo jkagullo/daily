@@ -22,8 +22,6 @@ export interface Settings {
   theme: Theme;
   accent: Accent;
   exportTitle: string;
-  /** Shown as "made with love by {name}" on exported images */
-  exportName: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -34,7 +32,6 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   accent: "green",
   exportTitle: "My tasks",
-  exportName: "",
 };
 
 const isSettingsKey = (k: string): k is keyof Settings => k in DEFAULT_SETTINGS;

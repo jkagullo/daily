@@ -53,7 +53,6 @@
           if (q.includes("FROM settings")) return [
             { key: "theme", value: JSON.stringify(theme) },
             { key: "accent", value: JSON.stringify(accent) },
-            { key: "exportName", value: JSON.stringify("jkdev") },
           ];
           if (q.includes("GROUP BY date")) return summaries;
           if (q.includes("completed_at DESC")) return log.slice(0, 5);
@@ -69,7 +68,7 @@
       if (mode === "export") {
         const { renderHeatmapPng } = await import("/src/lib/exportImage.ts");
         const { ACCENTS } = await import("/src/lib/settings.ts");
-        const blob = await renderHeatmapPng({ today, summaries, streak: 16, accent: ACCENTS[accent], title: "My tasks", name: "jkdev" });
+        const blob = await renderHeatmapPng({ today, summaries, streak: 16, accent: ACCENTS[accent], title: "My tasks" });
         const img = new Image();
         img.src = URL.createObjectURL(blob);
         img.style.cssText = "display:block;width:" + 552 + "px";
