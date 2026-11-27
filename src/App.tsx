@@ -40,7 +40,6 @@ import "./styles.css";
 const appWindow = getCurrentWindow();
 
 const UNDO_MS = 5000;
-const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 const countDone = (tasks: TodayTask[]) => tasks.filter((t) => t.completedAt !== null).length;
 const errText = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
@@ -82,14 +81,11 @@ export default function App() {
     }
   };
 
-  // Quietly check shortly after launch, then a few times a day.
+  // Check once per launch (like Discord), a few seconds in so startup stays snappy.
+  // Settings → Updates → "Check now" covers anything in between.
   useEffect(() => {
-    const first = window.setTimeout(() => void runUpdateCheck(false), 5000);
-    const every = window.setInterval(() => void runUpdateCheck(false), UPDATE_CHECK_EVERY_MS);
-    return () => {
-      window.clearTimeout(first);
-      window.clearInterval(every);
-    };
+    const id = window.setTimeout(() => void runUpdateCheck(false), 5000);
+    return () => window.clearTimeout(id);
   }, [runUpdateCheck]);
 
   const refresh = useCallback(async () => {

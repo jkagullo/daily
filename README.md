@@ -40,7 +40,7 @@ Plan today, check things off, and watch your streak grow. No account, no cloud. 
 - **Export your heatmap** as a shareable PNG with your own title.
 - **Evening reminder.** A gentle Windows notification if you're behind (default: 9 PM, under 50%).
 - **Drag to reorder**, **double-click to edit**, **undo on delete**, **light/dark theme**, **accent colors**, **backup & restore**.
-- **Auto-updates.** Daily checks GitHub Releases and offers a one-click "Update and restart". Updates are signed, so only official builds install.
+- **Auto-updates.** On launch, Daily checks GitHub Releases and offers a one-click "Update and restart". Updates are signed, so only official builds install.
 - **Light.** Built with [Tauri](https://tauri.app), so it uses the WebView2 that's already part of Windows instead of shipping a whole browser.
 
 ## Install

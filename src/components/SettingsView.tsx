@@ -46,7 +46,7 @@ function updateHint(u: UpdateState): string | undefined {
     case "error":
       return "Couldn't check right now. Try again later.";
     default:
-      return "Checks for new versions a few times a day";
+      return "Checks for new versions each time Daily starts";
   }
 }
 
