@@ -1,7 +1,7 @@
 {
   "name": "daily",
   "private": true,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "A tiny always-there daily task panel that lives in your Windows tray.",
   "license": "MIT",
   "author": "jkdev",

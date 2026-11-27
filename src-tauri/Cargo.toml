@@ -1,6 +1,6 @@
 [package]
 name = "daily"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tray-resident daily task panel"
 authors = ["jkdev"]
 license = "MIT"
