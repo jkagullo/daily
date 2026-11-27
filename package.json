@@ -1,0 +1,36 @@
+{
+  "name": "daily",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A tiny always-there daily task panel that lives in your Windows tray.",
+  "license": "MIT",
+  "author": "jkdev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/jkagullo/daily.git"
+  },
+  "type": "module",
+  "packageManager": "pnpm@10.29.3",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-notification": "^2.8.1",
+    "@tauri-apps/plugin-sql": "^2.6.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^19.1.8",
+    "@types/react-dom": "^19.1.6",
+    "@vitejs/plugin-react": "^6.0.2",
+    "typescript": "~6.0.3",
+    "vite": "^8.0.16"
+  }
+}

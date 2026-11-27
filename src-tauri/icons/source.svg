@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="1024" height="1024" shape-rendering="crispEdges">
+  <!-- daisy antenna -->
+  <rect x="7" y="0" width="1" height="1" fill="#ffffff"/>
+  <rect x="6" y="1" width="1" height="1" fill="#ffffff"/>
+  <rect x="8" y="1" width="1" height="1" fill="#ffffff"/>
+  <rect x="7" y="2" width="1" height="1" fill="#ffffff"/>
+  <rect x="7" y="1" width="1" height="1" fill="#f2c94c"/>
+  <rect x="7" y="3" width="1" height="1" fill="#5baa6a"/>
+  <!-- body -->
+  <rect x="3" y="4" width="9" height="1" fill="#e8825e"/>
+  <rect x="2" y="5" width="11" height="6" fill="#e8825e"/>
+  <rect x="3" y="11" width="9" height="1" fill="#e8825e"/>
+  <!-- arms -->
+  <rect x="1" y="7" width="1" height="2" fill="#e8825e"/>
+  <rect x="13" y="7" width="1" height="2" fill="#e8825e"/>
+  <!-- eyes + smile -->
+  <rect x="5" y="6" width="1" height="2" fill="#2b2420"/>
+  <rect x="9" y="6" width="1" height="2" fill="#2b2420"/>
+  <rect x="6" y="9" width="3" height="1" fill="#2b2420"/>
+  <!-- legs -->
+  <rect x="4" y="12" width="2" height="2" fill="#c4643f"/>
+  <rect x="9" y="12" width="2" height="2" fill="#c4643f"/>
+  <!-- rows 14-15 left empty: the tray draws today's progress bar there -->
+</svg>

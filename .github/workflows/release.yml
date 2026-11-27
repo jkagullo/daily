@@ -1,0 +1,48 @@
+# Builds the Windows installer and publishes it as a GitHub Release.
+# Trigger: push a version tag, e.g.
+#   git tag v0.1.0 && git push origin v0.1.0
+# Keep the tag in sync with "version" in src-tauri/tauri.conf.json.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write # create the release and upload the installer
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: Daily ${{ github.ref_name }}
+          releaseBody: |
+            Download **Daily_*_x64-setup.exe** below and run it.
+
+            Windows may show "Windows protected your PC" because the installer isn't code-signed.
+            Click **More info → Run anyway**. See the README for details.
+          releaseDraft: false
+          prerelease: false
