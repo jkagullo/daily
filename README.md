@@ -21,6 +21,7 @@ Plan today, check things off, and watch your streak grow. No account, no cloud. 
     <td align="center"><img src="docs/screenshots/panel-light.png" width="260" alt="Today's tasks in the light theme" /><br /><sub>Today, light</sub></td>
     <td align="center"><img src="docs/screenshots/panel-dark.png" width="260" alt="Today's tasks in the dark theme" /><br /><sub>Today, dark</sub></td>
     <td align="center"><img src="docs/screenshots/settings.png" width="260" alt="Settings: reminder, start with Windows, theme, accent, export" /><br /><sub>Settings</sub></td>
+    <td align="center"><img src="docs/screenshots/welcome.png" width="260" alt="First-run welcome screen with three tips" /><br /><sub>First run</sub></td>
   </tr>
 </table>
 
@@ -35,10 +36,11 @@ Plan today, check things off, and watch your streak grow. No account, no cloud. 
 - **Lives in the tray.** Left-click the bot to open today's list; click away and it tucks itself back. Pin it to keep it on top.
 - **Recurring tasks.** Once, daily, weekdays, or any days you pick (e.g. Mon/Wed/Fri). Each day gets a fresh copy. Skipped days don't pile up.
 - **Progress at a glance.** A progress bar in the panel *and* a tiny one under the tray icon.
-- **Heatmap.** A contribution-style grid of the last 20 weeks. Click any square to see what you finished that day.
+- **Heatmap.** A contribution-style grid of the last 20 weeks. Click any square to see what you finished that day, with a this-week vs. last-week summary underneath.
 - **Export your heatmap** as a shareable PNG with your own title.
 - **Evening reminder.** A gentle Windows notification if you're behind (default: 9 PM, under 50%).
-- **Drag to reorder**, **double-click to edit**, **light/dark theme**, **accent colors**, **backup & restore**.
+- **Drag to reorder**, **double-click to edit**, **undo on delete**, **light/dark theme**, **accent colors**, **backup & restore**.
+- **Auto-updates.** Daily checks GitHub Releases and offers a one-click "Update and restart". Updates are signed, so only official builds install.
 - **Light.** Built with [Tauri](https://tauri.app), so it uses the WebView2 that's already part of Windows instead of shipping a whole browser.
 
 ## Install
@@ -71,6 +73,7 @@ Prerequisites: [Node 20+](https://nodejs.org), [pnpm](https://pnpm.io), [Rust](h
 ```powershell
 pnpm install
 pnpm tauri dev      # run with hot reload
+pnpm test           # unit tests (dates, recurrence, streaks, reminder timing)
 pnpm tauri build    # installer → src-tauri/target/release/bundle/nsis/
 ```
 
@@ -97,14 +100,16 @@ src-tauri/              Rust shell
 
 ### Releasing
 
-Bump `version` in `src-tauri/tauri.conf.json` and `package.json`, commit, then:
+Bump `version` in `package.json`, `src-tauri/tauri.conf.json` and `src-tauri/Cargo.toml` (then run `cargo check` so `Cargo.lock` follows), commit, then:
 
 ```powershell
 git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The [Release workflow](.github/workflows/release.yml) builds the installer and publishes it.
+The [Release workflow](.github/workflows/release.yml) builds the installer, signs it for the updater, and publishes it along with `latest.json`, which installed copies check for updates.
+
+**Updater signing key.** Releases are signed with a private key stored in the repo secret `TAURI_SIGNING_PRIVATE_KEY`. Its public half is `plugins.updater.pubkey` in `tauri.conf.json`. Keep a backup of the private key: if it's lost, existing installs can't verify new updates and everyone has to reinstall manually. Forks must generate their own (`pnpm tauri signer generate`) and replace the pubkey.
 
 ## License
 

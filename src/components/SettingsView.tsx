@@ -3,12 +3,16 @@ import { invoke } from "@tauri-apps/api/core";
 import { getVersion } from "@tauri-apps/api/app";
 import { formatHour } from "../lib/date";
 import { ACCENTS, type Accent, type Settings, type Theme } from "../lib/settings";
+import type { UpdateState } from "../lib/updater";
 
 interface Props {
   settings: Settings;
   onChange: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   onBackup: () => Promise<string | null>;
   onRestore: () => Promise<string | null>;
+  update: UpdateState;
+  onCheckUpdate: () => void;
+  onInstallUpdate: () => void;
 }
 
 const THRESHOLDS = [25, 50, 75, 100];
@@ -29,6 +33,21 @@ function Row({ label, hint, children }: { label: string; hint?: string; children
       <div className="set-control">{children}</div>
     </div>
   );
+}
+
+function updateHint(u: UpdateState): string | undefined {
+  switch (u.kind) {
+    case "none":
+      return "You're on the latest version";
+    case "available":
+      return `${u.update.version} is ready to install`;
+    case "installing":
+      return u.percent !== null ? `Downloading… ${u.percent}%` : "Installing…";
+    case "error":
+      return "Couldn't check right now. Try again later.";
+    default:
+      return "Checks for new versions a few times a day";
+  }
 }
 
 function Switch({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -62,7 +81,7 @@ function TextSetting({ value, placeholder, label, onSave }: { value: string; pla
   );
 }
 
-export function SettingsView({ settings, onChange, onBackup, onRestore }: Props) {
+export function SettingsView({ settings, onChange, onBackup, onRestore, update, onCheckUpdate, onInstallUpdate }: Props) {
   const [autostart, setAutostart] = useState<boolean | null>(null);
   const [version, setVersion] = useState("");
   const [dataMsg, setDataMsg] = useState<{ text: string; error: boolean } | null>(null);
@@ -203,6 +222,19 @@ export function SettingsView({ settings, onChange, onBackup, onRestore }: Props)
       </div>
       {dataMsg && <p className={dataMsg.error ? "error" : "set-ok"}>{dataMsg.text}</p>}
       <p className="set-hint data-hint">Everything stays on this PC. Back up before switching computers.</p>
+
+      <h2>Updates</h2>
+      <Row label={`Version ${version || "…"}`} hint={updateHint(update)}>
+        {update.kind === "available" ? (
+          <button className="set-btn primary" onClick={onInstallUpdate}>
+            Update to {update.update.version}
+          </button>
+        ) : (
+          <button className="set-btn" onClick={onCheckUpdate} disabled={update.kind === "checking" || update.kind === "installing"}>
+            {update.kind === "checking" ? "Checking…" : "Check now"}
+          </button>
+        )}
+      </Row>
 
       <p className="about">
         Daily {version && `v${version}`} · made with love by jkdev 🌼

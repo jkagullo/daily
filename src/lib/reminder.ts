@@ -1,5 +1,6 @@
 import { isPermissionGranted, requestPermission, sendNotification } from "@tauri-apps/plugin-notification";
-import { logicalNow, toDateKey } from "./date";
+import { logicalNow } from "./date";
+import { reminderMoment, shouldNudge } from "./schedule";
 import type { Settings } from "./settings";
 
 const STORAGE_KEY = "daily.lastReminder";
@@ -30,19 +31,14 @@ export function startReminder(
     if (!s.reminderEnabled) return;
 
     const now = new Date();
-    const day = logicalNow(s.dayStartHour, now);
-    const [hh, mm] = s.reminderTime.split(":").map(Number);
-    const remindAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hh, mm);
-    // e.g. day starts 4am, reminder 1am → that's 1am of the *next* calendar date
-    if (hh < s.dayStartHour) remindAt.setDate(remindAt.getDate() + 1);
-    if (now < remindAt) return;
+    const { dayKey, at } = reminderMoment(s, now);
+    if (now < at) return;
 
-    const dayKey = toDateKey(day);
     if (localStorage.getItem(STORAGE_KEY) === dayKey) return;
     localStorage.setItem(STORAGE_KEY, dayKey);
 
-    const { done, total } = await getProgress(day);
-    if (total === 0 || (done / total) * 100 >= s.reminderThreshold) return;
+    const { done, total } = await getProgress(logicalNow(s.dayStartHour, now));
+    if (!shouldNudge(done, total, s.reminderThreshold)) return;
     if (!(await canNotify())) return;
 
     const left = total - done;

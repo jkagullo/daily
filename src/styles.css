@@ -164,3 +164,37 @@ button.cell:hover, .cell.selected { outline: 1.5px solid var(--text-2); outline-
 .set-ok { margin: 4px 2px 0; color: var(--accent); font-size: 12px; }
 .data-hint { display: block; margin: 6px 2px 0; }
 .about { margin: 18px 2px 6px; text-align: center; font-size: 11px; color: var(--text-3); }
+
+.week { display: flex; gap: 6px; align-items: baseline; margin: 8px 2px 0; font-size: 12px; color: var(--text-2); }
+.week strong { color: var(--text); font-weight: 600; }
+.muted-sep { color: var(--text-3); }
+.delta { margin-left: 4px; font-size: 11px; }
+.delta.up { color: var(--accent); }
+.delta.down { color: var(--text-3); }
+
+.toast { display: flex; align-items: center; gap: 10px; margin-top: 8px; padding: 8px 10px; border-radius: 8px; background: var(--text); color: var(--bg); font-size: 12px; animation: toast-in 0.15s ease-out; }
+.toast-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.toast .link-btn { font-size: 12px; font-weight: 600; color: var(--l2); }
+@keyframes toast-in { from { opacity: 0; transform: translateY(4px); } }
+
+/* First-run welcome */
+.welcome { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4px 8px 12px; }
+.welcome-bot { width: 64px; height: 64px; image-rendering: pixelated; margin: 4px 0 10px; }
+.welcome h1 { font-size: 18px; }
+.welcome > .muted { margin-top: 4px; }
+.welcome-tips { text-align: left; margin: 18px 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; color: var(--text-2); line-height: 1.45; }
+.welcome-tips strong { color: var(--text); font-weight: 600; }
+.welcome-tips li::marker { color: var(--accent); font-weight: 600; }
+.kbd { display: inline-block; padding: 0 5px; border: 1px solid var(--border); border-radius: 4px; background: var(--bg-soft); font-weight: 600; color: var(--text); }
+.welcome-check { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; color: var(--text-2); cursor: pointer; }
+.welcome-check input { accent-color: var(--accent); width: 15px; height: 15px; cursor: pointer; }
+.welcome-go { width: 100%; height: 36px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+.welcome-go:hover { background: var(--l4); }
+.welcome-go:disabled { opacity: 0.7; cursor: progress; }
+
+.update-bar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 6px 2px 0; padding: 6px 10px; border-radius: 8px; background: color-mix(in srgb, var(--accent) 14%, var(--bg)); font-size: 12px; }
+.update-bar .link-btn { font-size: 12px; font-weight: 600; }
+.set-btn { height: 28px; padding: 0 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); cursor: pointer; font-size: 12px; white-space: nowrap; }
+.set-btn:hover { background: var(--bg-soft); }
+.set-btn:disabled { cursor: progress; opacity: 0.6; }
+.set-btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }

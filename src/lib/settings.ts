@@ -22,6 +22,8 @@ export interface Settings {
   theme: Theme;
   accent: Accent;
   exportTitle: string;
+  /** Set once the first-run welcome has been seen */
+  onboarded: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -32,6 +34,7 @@ export const DEFAULT_SETTINGS: Settings = {
   theme: "system",
   accent: "green",
   exportTitle: "My tasks",
+  onboarded: false,
 };
 
 const isSettingsKey = (k: string): k is keyof Settings => k in DEFAULT_SETTINGS;

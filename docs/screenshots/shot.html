@@ -15,6 +15,8 @@
       const theme = params.get("theme") ?? "light";
       const accent = params.get("accent") ?? "green";
       const mode = params.get("mode") ?? "app";
+      const welcome = params.get("welcome") === "1";
+      const offerUpdate = params.get("update") === "1";
 
       const today = new Date();
       const key = toDateKey(today);
@@ -53,14 +55,18 @@
           if (q.includes("FROM settings")) return [
             { key: "theme", value: JSON.stringify(theme) },
             { key: "accent", value: JSON.stringify(accent) },
+            { key: "onboarded", value: JSON.stringify(!welcome) },
           ];
-          if (q.includes("GROUP BY date")) return summaries;
+          if (q.includes("COUNT(*) AS n")) return [{ n: welcome ? 0 : tasks.length }];
+          if (q.includes("GROUP BY date")) return welcome ? [] : summaries;
           if (q.includes("completed_at DESC")) return log.slice(0, 5);
-          if (q.includes("i.date = $1")) return tasks;
+          if (q.includes("i.date = $1")) return welcome ? [] : tasks;
           return [];
         }
         if (cmd === "get_autostart") return true;
-        if (cmd === "plugin:app|version") return "0.1.0";
+        if (cmd === "plugin:app|version") return "0.2.0";
+        if (cmd === "plugin:updater|check")
+          return offerUpdate ? { rid: 1, currentVersion: "0.2.0", version: "0.2.1", date: null, body: "", rawJson: {} } : null;
         if (cmd.startsWith("plugin:notification")) return false;
         return null;
       }, { shouldMockEvents: true });

@@ -38,7 +38,11 @@ struct PanelState {
 
 fn show_panel(app: &AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
-        let _ = win.move_window(Position::TrayCenter);
+        // Positioner only knows where the tray is after the first tray event;
+        // before that (first launch), fall back to the screen centre.
+        if win.move_window(Position::TrayCenter).is_err() {
+            let _ = win.center();
+        }
         let _ = win.show();
         let _ = win.set_focus();
     }
@@ -102,6 +106,12 @@ fn progress_icon(done: u32, total: u32, color: [u8; 3]) -> tauri::Result<Image<'
         }
     }
     Ok(Image::new_owned(rgba, w, h))
+}
+
+/// Used on first launch so new users see the panel without hunting for the tray icon.
+#[tauri::command]
+fn open_panel(app: AppHandle) {
+    show_panel(&app);
 }
 
 #[tauri::command]
@@ -274,6 +284,8 @@ pub fn run() {
         .plugin(tauri_plugin_autostart::init(MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(DB_URL, migrations)
@@ -281,6 +293,7 @@ pub fn run() {
         )
         .manage(PanelState::default())
         .invoke_handler(tauri::generate_handler![
+            open_panel,
             set_pinned,
             set_progress,
             get_autostart,

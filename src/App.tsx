@@ -3,22 +3,24 @@ import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { AddTask } from "./components/AddTask";
 import { DayDetail } from "./components/DayDetail";
-import { Heatmap, heatmapStart, HEATMAP_WEEKS } from "./components/Heatmap";
+import { Heatmap } from "./components/Heatmap";
 import { BackIcon, CloseIcon, GearIcon, PinIcon } from "./components/icons";
 import { SettingsView } from "./components/SettingsView";
 import { TaskList } from "./components/TaskList";
+import { WeekSummary } from "./components/WeekSummary";
+import { Welcome } from "./components/Welcome";
 import {
   addTask,
   backupTo,
   closeDb,
   daySummaries,
   ensureDay,
+  hasAnyTasks,
   listDay,
   recentLog,
   removeTask,
   reorderTasks,
   setDone,
-  streak,
   updateTask,
   type DaySummary,
   type LogEntry,
@@ -26,14 +28,19 @@ import {
 } from "./lib/db";
 import { formatHeader, logicalNow, msUntilNextDay, toDateKey } from "./lib/date";
 import { exportHeatmap } from "./lib/exportImage";
+import { heatmapStart, HEATMAP_WEEKS } from "./lib/heatmap";
 import type { Recurrence } from "./lib/recurrence";
 import { startReminder } from "./lib/reminder";
+import { streak } from "./lib/stats";
 import { ACCENTS, DEFAULT_SETTINGS, loadSettings, saveSetting, type Settings } from "./lib/settings";
 import { applyAppearance, hexToRgb } from "./lib/theme";
+import { checkForUpdate, installUpdate, type UpdateState } from "./lib/updater";
 import "./styles.css";
 
 const appWindow = getCurrentWindow();
 
+const UNDO_MS = 5000;
+const UPDATE_CHECK_EVERY_MS = 6 * 60 * 60 * 1000;
 const countDone = (tasks: TodayTask[]) => tasks.filter((t) => t.completedAt !== null).length;
 const errText = (err: unknown) => (err instanceof Error ? err.message : String(err));
 
@@ -41,7 +48,7 @@ export default function App() {
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   // Ref mirror so long-lived callbacks (refresh, reminder) always read the latest settings.
   const settingsRef = useRef<Settings>(DEFAULT_SETTINGS);
-  const [view, setView] = useState<"today" | "settings">("today");
+  const [view, setView] = useState<"today" | "settings" | "welcome">("today");
   const [today, setToday] = useState(() => new Date());
   const [tasks, setTasks] = useState<TodayTask[]>([]);
   const [summaries, setSummaries] = useState<DaySummary[]>([]);
@@ -50,6 +57,40 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const [exportMsg, setExportMsg] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [updateState, setUpdateState] = useState<UpdateState>({ kind: "idle" });
+
+  /** `manual` = from the Settings button, so show "up to date" / errors instead of staying quiet. */
+  const runUpdateCheck = useCallback(async (manual: boolean) => {
+    if (manual) setUpdateState({ kind: "checking" });
+    try {
+      const update = await checkForUpdate();
+      if (update) setUpdateState({ kind: "available", update });
+      else if (manual) setUpdateState({ kind: "none" });
+    } catch (err) {
+      if (manual) setUpdateState({ kind: "error", message: errText(err) });
+    }
+  }, []);
+
+  const startUpdate = async () => {
+    if (updateState.kind !== "available") return;
+    const { update } = updateState;
+    setUpdateState({ kind: "installing", percent: null });
+    try {
+      await installUpdate(update, (percent) => setUpdateState({ kind: "installing", percent }));
+    } catch (err) {
+      setUpdateState({ kind: "error", message: errText(err) });
+    }
+  };
+
+  // Quietly check shortly after launch, then a few times a day.
+  useEffect(() => {
+    const first = window.setTimeout(() => void runUpdateCheck(false), 5000);
+    const every = window.setInterval(() => void runUpdateCheck(false), UPDATE_CHECK_EVERY_MS);
+    return () => {
+      window.clearTimeout(first);
+      window.clearInterval(every);
+    };
+  }, [runUpdateCheck]);
 
   const refresh = useCallback(async () => {
     try {
@@ -78,6 +119,17 @@ export default function App() {
         const s = await loadSettings();
         settingsRef.current = s;
         setSettings(s);
+        if (!s.onboarded) {
+          if (await hasAnyTasks()) {
+            // Existing user from before the welcome screen existed: skip it.
+            settingsRef.current = { ...s, onboarded: true };
+            setSettings(settingsRef.current);
+            await saveSetting("onboarded", true);
+          } else {
+            setView("welcome");
+            await invoke("open_panel"); // new users shouldn't have to find the tray icon first
+          }
+        }
       } catch (err) {
         setError(errText(err));
       }
@@ -131,6 +183,41 @@ export default function App() {
     saveSetting(key, value).catch((err: unknown) => setError(errText(err)));
     if (key === "dayStartHour" || key === "accent") void refresh();
   };
+
+  // Undo on remove: hide the task now, delete it for real after UNDO_MS unless undone.
+  const [pendingRemove, setPendingRemove] = useState<TodayTask | null>(null);
+  const removeTimer = useRef<number | undefined>(undefined);
+  const pendingRef = useRef<TodayTask | null>(null);
+
+  const commitRemove = useCallback(async () => {
+    window.clearTimeout(removeTimer.current);
+    const task = pendingRef.current;
+    pendingRef.current = null;
+    setPendingRemove(null);
+    if (!task) return;
+    try {
+      await removeTask(task);
+    } catch (err) {
+      setError(errText(err));
+    }
+    await refresh();
+  }, [refresh]);
+
+  const handleRemove = (task: TodayTask) => {
+    if (pendingRef.current) void commitRemove(); // only one undo slot: finish the previous one
+    pendingRef.current = task;
+    setPendingRemove(task);
+    removeTimer.current = window.setTimeout(() => void commitRemove(), UNDO_MS);
+  };
+
+  const undoRemove = () => {
+    window.clearTimeout(removeTimer.current);
+    pendingRef.current = null;
+    setPendingRemove(null);
+  };
+
+  // Don't lose a pending delete if the panel unmounts (e.g. reload).
+  useEffect(() => () => void commitRemove(), [commitRemove]);
 
   const run = async (action: () => Promise<void>) => {
     try {
@@ -194,8 +281,9 @@ export default function App() {
     return "Restored from backup";
   };
 
-  const doneCount = countDone(tasks);
-  const pct = tasks.length ? Math.round((doneCount / tasks.length) * 100) : 0;
+  const visibleTasks = pendingRemove ? tasks.filter((t) => t.instanceId !== pendingRemove.instanceId) : tasks;
+  const doneCount = countDone(visibleTasks);
+  const pct = visibleTasks.length ? Math.round((doneCount / visibleTasks.length) * 100) : 0;
   const streakDays = streak(summaries, today);
 
   const closeButton = (
@@ -203,6 +291,26 @@ export default function App() {
       <CloseIcon />
     </button>
   );
+
+  if (view === "welcome") {
+    return (
+      <main className="panel">
+        <header className="header" data-tauri-drag-region>
+          <span data-tauri-drag-region />
+          <div className="header-actions">{closeButton}</div>
+        </header>
+        <section className="scroll">
+          <Welcome
+            onDone={() => {
+              updateSetting("onboarded", true);
+              setView("today");
+              setTimeout(() => document.querySelector<HTMLInputElement>(".add input")?.focus(), 50);
+            }}
+          />
+        </section>
+      </main>
+    );
+  }
 
   if (view === "settings") {
     return (
@@ -223,6 +331,9 @@ export default function App() {
             onChange={updateSetting}
             onBackup={handleBackup}
             onRestore={handleRestore}
+            update={updateState}
+            onCheckUpdate={() => void runUpdateCheck(true)}
+            onInstallUpdate={() => void startUpdate()}
           />
         </section>
       </main>
@@ -235,7 +346,7 @@ export default function App() {
         <div data-tauri-drag-region>
           <h1 data-tauri-drag-region>{formatHeader(today)}</h1>
           <p className="muted" data-tauri-drag-region>
-            {doneCount} of {tasks.length} done
+            {doneCount} of {visibleTasks.length} done
           </p>
         </div>
         <div className="header-actions">
@@ -263,12 +374,27 @@ export default function App() {
 
       {error && <p className="error">{error}</p>}
 
+      {(updateState.kind === "available" || updateState.kind === "installing") && (
+        <div className="update-bar" role="status">
+          {updateState.kind === "available" ? (
+            <>
+              <span>Daily {updateState.update.version} is out</span>
+              <button className="link-btn" onClick={() => void startUpdate()}>
+                Update and restart
+              </button>
+            </>
+          ) : (
+            <span>Updating{updateState.percent !== null ? ` · ${updateState.percent}%` : "…"}</span>
+          )}
+        </div>
+      )}
+
       <section className="scroll">
         <h2>Today</h2>
         <TaskList
-          tasks={tasks}
+          tasks={visibleTasks}
           onToggle={(t) => void run(() => setDone(t.instanceId, t.completedAt === null))}
-          onRemove={(t) => void run(() => removeTask(t))}
+          onRemove={handleRemove}
           onEdit={handleEdit}
           onReorder={handleReorder}
         />
@@ -294,6 +420,7 @@ export default function App() {
           selected={selectedDay}
           onSelect={(key) => setSelectedDay((cur) => (cur === key ? null : key))}
         />
+        <WeekSummary summaries={summaries} today={today} />
         {selectedDay && <DayDetail dateKey={selectedDay} stamp={summaries} onClose={() => setSelectedDay(null)} />}
 
         <h2>Log</h2>
@@ -310,6 +437,16 @@ export default function App() {
           </ul>
         )}
       </section>
+      {pendingRemove && (
+        <div className="toast" role="status">
+          <span className="toast-text">
+            {pendingRemove.recurrence.kind === "once" ? "Deleted" : "Stopped repeating"} “{pendingRemove.title}”
+          </span>
+          <button className="link-btn" onClick={undoRemove}>
+            Undo
+          </button>
+        </div>
+      )}
     </main>
   );
 }

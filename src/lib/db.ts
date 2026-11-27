@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql";
-import { addDays, toDateKey, toTimestamp } from "./date";
+import { toDateKey, toTimestamp } from "./date";
 import { decodeRecurrence, encodeRecurrence, occursOn, type Recurrence } from "./recurrence";
 
 // Same URL as DB_URL in src-tauri/src/lib.rs, which is what triggers the migrations.
@@ -151,16 +151,11 @@ export async function recentLog(limit = 5): Promise<LogEntry[]> {
   return rows.map((r) => ({ title: r.title, completedAt: r.completed_at }));
 }
 
-/** Consecutive days (ending today, or yesterday if today has nothing done yet) with ≥1 task done. */
-export function streak(summaries: DaySummary[], today: Date): number {
-  const doneDays = new Set(summaries.filter((s) => s.done > 0).map((s) => s.date));
-  let cursor = doneDays.has(toDateKey(today)) ? today : addDays(today, -1);
-  let count = 0;
-  while (doneDays.has(toDateKey(cursor))) {
-    count++;
-    cursor = addDays(cursor, -1);
-  }
-  return count;
+/** True once any task has ever been created (used to skip the welcome for existing users). */
+export async function hasAnyTasks(): Promise<boolean> {
+  const conn = await getDb();
+  const rows = await conn.select<{ n: number }[]>("SELECT COUNT(*) AS n FROM tasks");
+  return (rows[0]?.n ?? 0) > 0;
 }
 
 /** Write a consistent copy of the whole database to `path` (works while it's open). */

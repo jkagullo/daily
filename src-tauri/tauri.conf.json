@@ -49,6 +49,18 @@
       "nsis": {
         "installMode": "currentUser"
       }
+    },
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEY5QzBEQzZFN0ZDMzI1MkEKUldRcUpjTi9idHpBK1VRMDBNTzhXRFEzQStCTmt4TFBZNk5wQWFjM2I2NkNuTFQwT01vSyt4eGIK",
+      "endpoints": [
+        "https://github.com/jkagullo/daily/releases/latest/download/latest.json"
+      ],
+      "windows": {
+        "installMode": "passive"
+      }
     }
   }
 }

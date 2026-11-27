@@ -1,5 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
-import { buildCells, HEATMAP_WEEKS } from "../components/Heatmap";
+import { buildCells, HEATMAP_WEEKS } from "./heatmap";
 import type { DaySummary } from "./db";
 import { toDateKey } from "./date";
 import { mixHex } from "./theme";
